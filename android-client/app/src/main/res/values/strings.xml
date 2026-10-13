@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Qwenton Apex</string>
+    <string name="assistant_name">Qwenton Apex</string>
+    <string name="server_title">Qwenton Apex Local Server</string>
+</resources>

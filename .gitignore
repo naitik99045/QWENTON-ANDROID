@@ -1,0 +1,75 @@
+# ==============================================================================
+# Qwenton Apex Android - Comprehensive Root .gitignore
+# ==============================================================================
+
+# Built Application Packages & Binaries
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Android / Gradle Build Outputs
+.gradle/
+build/
+**/build/
+captures/
+.cxx/
+.externalNativeBuild/
+
+# Local Android Configuration & Keystores (SECRETS)
+local.properties
+*.jks
+*.keystore
+signing-info.properties
+
+# Android Studio & JetBrains IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.navigation/
+out/
+
+# Python & Termux Server Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+
+# Local Environment Secrets & Configuration
+.env
+.env.local
+.env.*.local
+*.env
+*.pem
+*.key
+
+# Local Execution & Audit Logs
+*.log
+termux-server/audit.jsonl
+audit.jsonl
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Temporary files & swap
+*.swp
+*.swo
+*~
+*.bak
+*.tmp

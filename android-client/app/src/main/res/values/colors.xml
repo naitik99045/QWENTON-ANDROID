@@ -1,0 +1,8 @@
+<resources>
+    <color name="charcoal_background">#121316</color>
+    <color name="charcoal_surface">#1B1D22</color>
+    <color name="accent_violet">#7C4DFF</color>
+    <color name="status_green">#00E676</color>
+    <color name="status_amber">#FFB300</color>
+    <color name="status_red">#FF5252</color>
+</resources>
