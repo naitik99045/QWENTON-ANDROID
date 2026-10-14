@@ -227,7 +227,12 @@ fun MainAppScaffold(
                     onApproveCommand = { cmdId -> viewModel.approveCommand(cmdId) },
                     onRejectCommand = { cmdId -> viewModel.rejectCommand(cmdId) },
                     onRetryConnection = { viewModel.testConnection() },
-                    onSelectWorkspace = { path -> viewModel.setWorkspace(path) }
+                    onSelectWorkspace = { path -> viewModel.setWorkspace(path) },
+                    onTestConnection = { viewModel.testConnection() },
+                    onSaveAiConfig = { provider, key, model, baseUrl ->
+                        viewModel.setAiConfig(provider, key, model, baseUrl)
+                        Toast.makeText(context, "Saved AI config to Key Vault ($provider)", Toast.LENGTH_SHORT).show()
+                    }
                 )
             }
 
@@ -256,14 +261,16 @@ fun MainAppScaffold(
             composable(NavRoute.Settings.route) {
                 SettingsScreen(
                     serverUrl = uiState.serverUrl,
+                    connectionStatus = uiState.connectionStatus,
                     aiProvider = uiState.aiProvider,
                     apiKey = uiState.apiKey,
                     activeModel = uiState.activeModel,
+                    customBaseUrl = uiState.customBaseUrl,
                     configSyncStatus = uiState.configSyncStatus,
                     onSaveServerUrl = { url -> viewModel.setServerUrl(url) },
                     onTestConnection = { viewModel.testConnection() },
-                    onSaveAiConfig = { provider, key, model ->
-                        viewModel.setAiConfig(provider, key, model)
+                    onSaveAiConfig = { provider, key, model, baseUrl ->
+                        viewModel.setAiConfig(provider, key, model, baseUrl)
                         Toast.makeText(context, "Saving AI config to Termux .env...", Toast.LENGTH_SHORT).show()
                     },
                     onStartTermuxServer = {
@@ -276,9 +283,22 @@ fun MainAppScaffold(
                     },
                     isTermuxInstalled = TermuxServiceHelper.isTermuxInstalled(context),
                     ttsEnabled = uiState.ttsEnabled,
+                    wakeWordEnabled = uiState.wakeWordEnabled,
+                    shizukuAvailable = uiState.shizukuAvailable,
                     onToggleTts = { enabled ->
                         viewModel.toggleTts(enabled)
                         if (!enabled) textToSpeechManager?.stop()
+                    },
+                    onToggleWakeWord = { enabled -> viewModel.toggleWakeWord(enabled) },
+                    onOpenNotificationSettings = {
+                        try {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Could not open Notification Settings: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     onEmergencyStop = {
                         viewModel.stopRequest()

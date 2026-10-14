@@ -2,6 +2,7 @@ package ai.qwenton.apex.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,10 +42,13 @@ fun ChatScreen(
     onRejectCommand: (String) -> Unit,
     onRetryConnection: () -> Unit,
     onSelectWorkspace: (String) -> Unit = {},
+    onTestConnection: () -> Unit = onRetryConnection,
+    onSaveAiConfig: (provider: String, apiKey: String, model: String, baseUrl: String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf("") }
     var showWorkspaceDialog by remember { mutableStateOf(false) }
+    var showSetupWizard by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     // Scroll to bottom on new messages or stream updates
@@ -72,6 +77,16 @@ fun ChatScreen(
             onApprove = onApproveCommand,
             onReject = onRejectCommand,
             onDismiss = { onRejectCommand(pendingProposal.commandId) }
+        )
+    }
+
+    // 100% On-Device Standalone Setup Wizard (No PC / Laptop Required)
+    if (showSetupWizard) {
+        SetupWizardDialog(
+            connectionStatus = connectionStatus,
+            onTestConnection = onTestConnection,
+            onSaveAiConfig = onSaveAiConfig,
+            onDismiss = { showSetupWizard = false }
         )
     }
 
@@ -115,10 +130,10 @@ fun ChatScreen(
             // Quick Command Action Rail
             QuickCommandRail(
                 onActionClick = { action ->
-                    if (action.id == "workspace") {
-                        showWorkspaceDialog = true
-                    } else {
-                        onSendMessage(action.prompt)
+                    when (action.id) {
+                        "wizard" -> showSetupWizard = true
+                        "workspace" -> showWorkspaceDialog = true
+                        else -> onSendMessage(action.prompt)
                     }
                 },
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -133,27 +148,76 @@ fun ChatScreen(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Surface(
-                    color = CharcoalSurface,
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, CharcoalBorder),
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(16.dp)
+                    Surface(
+                        color = CharcoalSurface,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CharcoalBorder),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "QWENTON APEX OPERATING SYSTEM",
-                            style = MonospaceHeader.copy(fontSize = 13.sp),
-                            color = PrimaryVioletLight
-                        )
-                        Text(
-                            text = "Air-gapped on-device AI operations center. Autonomous coding, SAST security audits, and Shizuku/ADB automation ready.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextMuted
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "QWENTON APEX OPERATING SYSTEM",
+                                style = MonospaceHeader.copy(fontSize = 13.sp),
+                                color = PrimaryVioletLight
+                            )
+                            Text(
+                                text = "Air-gapped on-device AI operations center. Autonomous coding, SAST security audits, and Shizuku/ADB automation ready.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                    }
+
+                    if (connectionStatus !is ConnectionStatus.Connected) {
+                        Surface(
+                            color = CharcoalSurface,
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryViolet.copy(alpha = 0.6f)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showSetupWizard = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Terminal,
+                                    contentDescription = null,
+                                    tint = PrimaryVioletLight,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "100% ON-DEVICE SETUP (NO PC REQUIRED)",
+                                        style = MonospaceHeader.copy(fontSize = 10.sp),
+                                        color = PrimaryVioletLight
+                                    )
+                                    Text(
+                                        text = "Setup Termux server, ADB auto-pairing & AI keys directly on your phone in 3 taps.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextPrimary
+                                    )
+                                }
+                                Button(
+                                    onClick = { showSetupWizard = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryViolet),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("Setup", fontSize = 12.sp)
+                                }
+                            }
+                        }
                     }
                 }
             }

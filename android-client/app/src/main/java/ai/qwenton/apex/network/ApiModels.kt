@@ -48,12 +48,14 @@ data class CommandApprovalResponseDto(
 data class AiConfigRequestDto(
     @SerializedName("provider") val provider: String,
     @SerializedName("api_key") val apiKey: String,
-    @SerializedName("model") val model: String
+    @SerializedName("model") val model: String,
+    @SerializedName("base_url") val baseUrl: String = ""
 )
 
 data class AiConfigResponseDto(
     @SerializedName("status") val status: String,
     @SerializedName("provider") val provider: String,
     @SerializedName("model") val model: String,
+    @SerializedName("base_url") val baseUrl: String? = null,
     @SerializedName("api_key_masked") val apiKeyMasked: String? = null
 )

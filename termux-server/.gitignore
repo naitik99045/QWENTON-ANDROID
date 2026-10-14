@@ -4,8 +4,11 @@ __pycache__/
 venv/
 .venv/
 env/
+ENV/
 .env
-.env.local
+.env.*
+*.env
+!.env.example
 *.log
 audit.jsonl
 .pytest_cache/
@@ -14,3 +17,5 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+.DS_Store
+Thumbs.db

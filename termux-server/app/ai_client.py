@@ -25,6 +25,41 @@ class AIClient:
         """Generate response or tool proposal based on user input and workspace context."""
         msg_lower = message.strip().lower()
 
+        # 0. Deterministic Intent: Open Installed Android Application
+        if msg_lower.startswith("open ") or msg_lower.startswith("launch "):
+            app_target = msg_lower.replace("open ", "").replace("launch ", "").strip()
+            return ToolRequestResponse(
+                request_id=request_id,
+                tool="open_app",
+                arguments={"app_name": app_target},
+                risk=RiskLevel.SAFE,
+                requires_approval=False,
+                explanation=f"Launch application '{app_target}' on Android device."
+            )
+
+        # 0b. Deterministic Intent: Phone Calling & Contact Dialing
+        if msg_lower.startswith("call ") or msg_lower.startswith("dial "):
+            contact_target = msg_lower.replace("call ", "").replace("dial ", "").strip()
+            return ToolRequestResponse(
+                request_id=request_id,
+                tool="call_contact",
+                arguments={"contact_name": contact_target},
+                risk=RiskLevel.MEDIUM,
+                requires_approval=True,
+                explanation=f"Search contacts and initiate phone call to '{contact_target}'."
+            )
+
+        # 0c. Deterministic Intent: Wireless Debugging Auto-Pairing
+        if "pairing code" in msg_lower or "pair wireless" in msg_lower or "pair adb" in msg_lower:
+            return ToolRequestResponse(
+                request_id=request_id,
+                tool="pair_wireless_debugging",
+                arguments={},
+                risk=RiskLevel.SAFE,
+                requires_approval=False,
+                explanation="Inspect Notification Listener for intercepted Wireless Debugging pairing code."
+            )
+
         # 1. Deterministic Intent: Security Pentest & SAST Scan
         if "pentest" in msg_lower or "security audit" in msg_lower or "vulnerability" in msg_lower or "sast" in msg_lower:
             return ToolRequestResponse(
@@ -180,6 +215,30 @@ class AIClient:
                 return AssistantMessageResponse(
                     request_id=request_id,
                     text=f"[OpenAI Error]: {str(e)}."
+                )
+
+        # 12. Custom Online Provider (Base URL + API Key) - e.g. OpenRouter, Groq, DeepSeek, Together, etc.
+        if self.provider == "custom" and getattr(config, "CUSTOM_BASE_URL", ""):
+            try:
+                base_url = config.CUSTOM_BASE_URL.strip().rstrip("/")
+                endpoint = base_url if base_url.endswith("/chat/completions") else f"{base_url}/chat/completions"
+                headers = {"Content-Type": "application/json"}
+                custom_key = getattr(config, "CUSTOM_API_KEY", "")
+                if custom_key:
+                    headers["Authorization"] = f"Bearer {custom_key}"
+                
+                model_name = getattr(config, "AI_MODEL", "gpt-4o-mini")
+                return await self._call_openai_compatible(
+                    request_id=request_id,
+                    endpoint=endpoint,
+                    headers=headers,
+                    message=message,
+                    model=model_name
+                )
+            except Exception as e:
+                return AssistantMessageResponse(
+                    request_id=request_id,
+                    text=f"[Custom Provider Error]: {str(e)}."
                 )
 
         # Default Mock Response with guidance

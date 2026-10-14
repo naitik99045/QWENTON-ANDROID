@@ -1,29 +1,91 @@
 # ==============================================================================
-# Qwenton Apex Android - Comprehensive Root .gitignore
+# Qwenton Apex Android - Master Git Ignore
 # ==============================================================================
 
-# Built Application Packages & Binaries
+# ------------------------------------------------------------------------------
+# 1. Android & Gradle Build Artifacts
+# ------------------------------------------------------------------------------
 *.apk
 *.ap_
 *.aab
 *.dex
 *.class
-
-# Android / Gradle Build Outputs
 .gradle/
-build/
 **/build/
+build/
 captures/
 .cxx/
 .externalNativeBuild/
 
-# Local Android Configuration & Keystores (SECRETS)
+# ------------------------------------------------------------------------------
+# 2. Local Machine Configuration & Secrets (CRITICAL FOR GITHUB UPLOAD)
+# ------------------------------------------------------------------------------
 local.properties
+**/local.properties
+signing-info.properties
 *.jks
 *.keystore
-signing-info.properties
+google-services.json
+**/google-services.json
 
-# Android Studio & JetBrains IDE
+# Environment files & API keys
+.env
+.env.*
+*.env
+!.env.example
+!**/.env.example
+
+# Certificates, keys & credentials
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ecdsa*
+id_ed25519*
+adbkey
+adbkey.pub
+credentials.json
+secrets/
+
+# ------------------------------------------------------------------------------
+# 3. Python & Termux Server Execution Artifacts
+# ------------------------------------------------------------------------------
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+dist/
+eggs/
+*.egg
+.mypy_cache/
+.ruff_cache/
+
+# ------------------------------------------------------------------------------
+# 4. Local Execution Logs & Runtime State
+# ------------------------------------------------------------------------------
+*.log
+audit.jsonl
+**/audit.jsonl
+*.sqlite3
+*.db
+!*.placeholder
+
+# ------------------------------------------------------------------------------
+# 5. IDEs, Editors & Workspaces
+# ------------------------------------------------------------------------------
+# Android Studio & JetBrains IntelliJ
 .idea/
 *.iml
 *.iws
@@ -31,45 +93,43 @@ signing-info.properties
 .navigation/
 out/
 
-# Python & Termux Server Artifacts
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.venv/
-env/
-.pytest_cache/
-.coverage
-htmlcov/
-*.egg-info/
-dist/
+# Visual Studio Code & Cursor
+.vscode/
+*.code-workspace
 
-# Local Environment Secrets & Configuration
-.env
-.env.local
-.env.*.local
-*.env
-*.pem
-*.key
+# Vim, Emacs & Editor Backups
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
 
-# Local Execution & Audit Logs
-*.log
-termux-server/audit.jsonl
-audit.jsonl
-
-# OS-specific files
+# ------------------------------------------------------------------------------
+# 6. Operating System Artifacts (Windows / macOS / Linux)
+# ------------------------------------------------------------------------------
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+ehthumbs_vista.db
 Thumbs.db
 [Dd]esktop.ini
+$RECYCLE.BIN/
+.directory
 
-# Temporary files & swap
-*.swp
-*.swo
-*~
-*.bak
-*.tmp
+# ------------------------------------------------------------------------------
+# 7. Asset Whitelist & Integrity Rules (DO NOT IGNORE ASSET PAYLOAD)
+# ------------------------------------------------------------------------------
+# Preserve bundled offline payload so Android APK can extract and bootstrap Termux
+!android-client/app/src/main/assets/termux-server/
+!android-client/app/src/main/assets/termux-server/**
+android-client/app/src/main/assets/termux-server/**/__pycache__/
+android-client/app/src/main/assets/termux-server/**/*.py[cod]
+android-client/app/src/main/assets/termux-server/**/*.env
+!android-client/app/src/main/assets/termux-server/**/.env.example
+
+# Preserve Gradle Wrapper binaries
+!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar

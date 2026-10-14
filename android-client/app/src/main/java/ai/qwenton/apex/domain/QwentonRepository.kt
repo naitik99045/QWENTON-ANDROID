@@ -109,14 +109,16 @@ class QwentonRepository(
     suspend fun updateAiProvider(
         provider: String,
         apiKey: String,
-        model: String
+        model: String,
+        baseUrl: String = ""
     ): Result<AiConfigResponseDto> {
         return try {
             val response = api.updateAiConfig(
                 AiConfigRequestDto(
                     provider = provider,
                     apiKey = apiKey,
-                    model = model
+                    model = model,
+                    baseUrl = baseUrl
                 )
             )
             Result.success(response)
@@ -156,6 +158,19 @@ class QwentonRepository(
     suspend fun clearHistory() {
         conversationDao.clearAllMessages()
         executionDao.clearAllExecutions()
+    }
+
+    suspend fun insertAssistantMessage(conversationId: String, content: String) {
+        conversationDao.insertMessage(
+            MessageEntity(
+                id = "msg_${System.currentTimeMillis()}",
+                conversationId = conversationId,
+                role = "ASSISTANT",
+                content = content,
+                timestamp = System.currentTimeMillis(),
+                requestId = "client_${System.currentTimeMillis()}"
+            )
+        )
     }
 
     suspend fun deleteMessage(id: String) {

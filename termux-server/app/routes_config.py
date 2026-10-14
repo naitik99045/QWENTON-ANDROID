@@ -11,11 +11,13 @@ class AiConfigRequest(BaseModel):
     provider: str
     api_key: str
     model: str = ""
+    base_url: str = ""
 
 class AiConfigResponse(BaseModel):
     status: str
     provider: str
     model: str
+    base_url: str = ""
     api_key_masked: str | None = None
 
 def _mask_secret(secret: str) -> str:
@@ -58,11 +60,14 @@ async def get_ai_config():
         current_key = config.OPENAI_API_KEY
     elif prov == "anthropic":
         current_key = config.ANTHROPIC_API_KEY
+    elif prov == "custom":
+        current_key = getattr(config, "CUSTOM_API_KEY", "")
 
     return AiConfigResponse(
         status="ok",
         provider=config.AI_PROVIDER,
         model=getattr(config, "AI_MODEL", "gemini-1.5-pro"),
+        base_url=getattr(config, "CUSTOM_BASE_URL", ""),
         api_key_masked=_mask_secret(current_key)
     )
 
@@ -73,10 +78,17 @@ async def update_ai_config(payload: AiConfigRequest):
     if prov not in valid_providers:
         raise HTTPException(status_code=400, detail=f"Invalid provider. Supported: {valid_providers}")
 
+    default_model = "gemini-1.5-pro" if prov == "gemini" else ("llama-3.2-3b-q4" if prov == "local" else "gpt-4o")
+    model_name = payload.model.strip() or default_model
+
     env_updates = {
         "AI_PROVIDER": prov,
-        "AI_MODEL": payload.model.strip() or ("gemini-1.5-pro" if prov == "gemini" else "gpt-4o")
+        "AI_MODEL": model_name
     }
+
+    if payload.base_url.strip():
+        env_updates["CUSTOM_BASE_URL"] = payload.base_url.strip()
+        config.CUSTOM_BASE_URL = payload.base_url.strip()
 
     if prov == "gemini":
         env_updates["GEMINI_API_KEY"] = payload.api_key.strip()
@@ -87,6 +99,12 @@ async def update_ai_config(payload: AiConfigRequest):
     elif prov == "anthropic":
         env_updates["ANTHROPIC_API_KEY"] = payload.api_key.strip()
         config.ANTHROPIC_API_KEY = payload.api_key.strip()
+    elif prov == "custom":
+        env_updates["CUSTOM_API_KEY"] = payload.api_key.strip()
+        config.CUSTOM_API_KEY = payload.api_key.strip()
+        if payload.base_url.strip():
+            env_updates["CUSTOM_BASE_URL"] = payload.base_url.strip()
+            config.CUSTOM_BASE_URL = payload.base_url.strip()
 
     config.AI_PROVIDER = prov
     config.AI_MODEL = env_updates["AI_MODEL"]
@@ -95,12 +113,14 @@ async def update_ai_config(payload: AiConfigRequest):
 
     log_audit_event("ai_provider_configured", {
         "provider": prov,
-        "model": config.AI_MODEL
+        "model": config.AI_MODEL,
+        "has_base_url": bool(payload.base_url.strip())
     })
 
     return AiConfigResponse(
         status="ok",
         provider=prov,
         model=config.AI_MODEL,
+        base_url=getattr(config, "CUSTOM_BASE_URL", ""),
         api_key_masked=_mask_secret(payload.api_key)
     )

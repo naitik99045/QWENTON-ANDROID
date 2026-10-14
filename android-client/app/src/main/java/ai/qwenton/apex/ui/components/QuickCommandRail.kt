@@ -36,6 +36,12 @@ fun QuickCommandRail(
 
     val actions = listOf(
         QuickAction(
+            id = "wizard",
+            title = "Setup Wizard (No PC)",
+            icon = Icons.Default.RocketLaunch,
+            prompt = "Open on-device setup wizard"
+        ),
+        QuickAction(
             id = "workspace",
             title = "Select Folder",
             icon = Icons.Default.FolderOpen,

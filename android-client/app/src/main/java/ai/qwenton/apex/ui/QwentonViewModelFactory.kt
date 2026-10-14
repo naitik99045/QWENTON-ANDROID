@@ -20,7 +20,7 @@ class QwentonViewModelFactory(
                 executionDao = database.executionDao()
             )
             val wsClient = WebSocketClient()
-            return QwentonViewModel(repository, wsClient) as T
+            return QwentonViewModel(repository, wsClient, context.applicationContext) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

@@ -40,3 +40,23 @@ All notable changes to the **Qwenton Apex Android** project are documented here.
   - Added 32 KB chat payload bounds in `routes_chat.py` to prevent memory exhaustion DoS.
   - Restricted CORS and WebSocket origins to local loopback origins to prevent cross-origin browser CSRF.
   - Added URL validation and fallback in Android `NetworkModule.kt` to prevent Retrofit runtime crashes.
+
+## [0.2.0] - On-Device Termux & Shizuku ADB Autonomous Automation - 2026-10-14
+
+### Added
+- **On-Device Server Bundling & Extraction**:
+  - Embedded Termux server source bundle into Android APK assets (`assets/termux-server/`).
+  - Added in-app `SetupWizardDialog` with 1-tap extraction, dependency installer script, and step-by-step guidance.
+- **Custom Provider & Open-Weights AI Endpoint Support**:
+  - Configurable `base_url` + `api_key` support across FastAPI server (`config.py`, `ai_client.py`, `routes_config.py`).
+  - Synced Settings and Setup Wizard in Jetpack Compose UI allowing users to point to any OpenAI-compatible provider (Ollama, vLLM, OpenRouter, DeepSeek, LocalAI, etc.).
+- **Shizuku & Android Native Device Automation**:
+  - Shizuku wireless ADB integration for terminal commands without a PC.
+  - Device automation intents for opening apps, dialer calls, camera, and notification access.
+
+## [0.2.1] - Git & Repository Hygiene for GitHub Release - 2026-10-14
+
+### Changed
+- Hardened root and subproject `.gitignore` files to guarantee sensitive credentials (`.env`, keystores, private keys, audit logs) are never committed to GitHub.
+- Configured explicit whitelist exceptions for `.env.example` templates and APK offline extraction payload (`assets/termux-server/`).
+
