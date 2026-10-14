@@ -53,6 +53,42 @@ TOOL_REGISTRY = {
         "default_args": [],
         "risk": RiskLevel.HIGH,
         "requires_approval": True
+    },
+    "workspace_tree": {
+        "program": "tree",
+        "default_args": [],
+        "risk": RiskLevel.SAFE,
+        "requires_approval": False
+    },
+    "patch_file": {
+        "program": "patch",
+        "default_args": [],
+        "risk": RiskLevel.MEDIUM,
+        "requires_approval": True
+    },
+    "write_file": {
+        "program": "write",
+        "default_args": [],
+        "risk": RiskLevel.MEDIUM,
+        "requires_approval": True
+    },
+    "run_sast_scan": {
+        "program": "sast",
+        "default_args": [],
+        "risk": RiskLevel.SAFE,
+        "requires_approval": False
+    },
+    "adb_command": {
+        "program": "adb",
+        "default_args": [],
+        "risk": RiskLevel.HIGH,
+        "requires_approval": True
+    },
+    "run_build": {
+        "program": "python",
+        "default_args": [],
+        "risk": RiskLevel.MEDIUM,
+        "requires_approval": True
     }
 }
 

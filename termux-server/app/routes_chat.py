@@ -33,7 +33,8 @@ async def chat_endpoint(request: ChatRequest):
     response = await ai_client.generate_response(
         request_id=request.request_id,
         conversation_id=request.conversation_id,
-        message=request.message
+        message=request.message,
+        context_path=request.context_path or "."
     )
 
     log_audit_event("chat_response_dispatched", {

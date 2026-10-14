@@ -25,4 +25,12 @@ interface QwentonApi {
     suspend fun cancelCommand(
         @Path("command_id") commandId: String
     ): CommandApprovalResponseDto
+
+    @GET("config/ai-provider")
+    suspend fun getAiConfig(): AiConfigResponseDto
+
+    @POST("config/ai-provider")
+    suspend fun updateAiConfig(
+        @Body request: AiConfigRequestDto
+    ): AiConfigResponseDto
 }

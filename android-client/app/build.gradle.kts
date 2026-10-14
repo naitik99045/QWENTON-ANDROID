@@ -73,6 +73,10 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Shizuku Rootless ADB Framework (UID 2000)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

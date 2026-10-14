@@ -7,6 +7,7 @@ from app.routes_health import router as health_router
 from app.routes_chat import router as chat_router
 from app.routes_commands import router as commands_router
 from app.routes_history import router as history_router
+from app.routes_config import router as config_router
 from app.audit_log import log_audit_event
 
 # Active WebSocket connections
@@ -63,6 +64,7 @@ app.include_router(health_router)
 app.include_router(chat_router)
 app.include_router(commands_router)
 app.include_router(history_router)
+app.include_router(config_router)
 
 # WebSocket Endpoint: /ws/events
 @app.websocket("/ws/events")

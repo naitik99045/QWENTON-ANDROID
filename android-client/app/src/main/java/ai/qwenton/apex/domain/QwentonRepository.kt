@@ -34,7 +34,8 @@ class QwentonRepository(
     suspend fun sendChat(
         requestId: String,
         conversationId: String,
-        message: String
+        message: String,
+        contextPath: String? = null
     ): Result<ChatResponseDto> {
         return try {
             // Persist user message to Room
@@ -53,7 +54,8 @@ class QwentonRepository(
                 ChatRequestDto(
                     requestId = requestId,
                     conversationId = conversationId,
-                    message = message
+                    message = message,
+                    contextPath = contextPath
                 )
             )
 
@@ -98,6 +100,34 @@ class QwentonRepository(
     suspend fun cancelCommand(commandId: String): Result<CommandApprovalResponseDto> {
         return try {
             val response = api.cancelCommand(commandId)
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateAiProvider(
+        provider: String,
+        apiKey: String,
+        model: String
+    ): Result<AiConfigResponseDto> {
+        return try {
+            val response = api.updateAiConfig(
+                AiConfigRequestDto(
+                    provider = provider,
+                    apiKey = apiKey,
+                    model = model
+                )
+            )
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getAiConfig(): Result<AiConfigResponseDto> {
+        return try {
+            val response = api.getAiConfig()
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)

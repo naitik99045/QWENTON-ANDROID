@@ -50,3 +50,16 @@
 - [x] [SEC-07] Enforce 32KB payload size limits in `routes_chat.py` to prevent DoS
 - [x] [SEC-08] Restrict CORS & WebSocket origins to local loopback to prevent browser CSRF
 - [x] [SEC-09] Validate and sanitize custom server URLs in `NetworkModule.kt` to prevent app crashes
+
+## Phase 7: v2.0 Qwenton Reactor HUD, Key Vault, Coding Engine & Shizuku/ADB Automation
+- [x] Implement animated Qwenton Reactor Core with Canvas state animations (`QwentonReactorCore.kt`)
+- [x] Implement real-time Telemetry Banner (`TelemetryBanner.kt`) with latency, battery, and engine readouts
+- [x] Implement Quick Command Rail (`QuickCommandRail.kt`) with instant action triggers
+- [x] Implement Code Diff Card with surgical diff syntax highlighting (`CodeDiffCard.kt`)
+- [x] Overhaul Chat Screen and Color palette adhering strictly to `qwenton-ui` solid OKLCH standards
+- [x] Build In-App AI Key Vault & Server Config Sync (`routes_config.py`, `SettingsScreen.kt`, and `QwentonViewModel.kt`)
+- [x] Build Workspace Folder Selector dialog (`WorkspaceDialog.kt`) for agile directory switching
+- [x] Build Autonomous Coding Toolset (`tools/coding.py`: tree, read, write, surgical patch)
+- [x] Build Automated SAST Pentesting Suite (`tools/pentest.py`: leaked keys, dangerous calls, port audit)
+- [x] Integrate Shizuku Rootless Shell Binder (`ShizukuManager.kt`) & Termux Wireless ADB bridge (`tools/adb_bridge.py`)
+- [x] Add v2 feature test suite (`test_v2_features.py`)

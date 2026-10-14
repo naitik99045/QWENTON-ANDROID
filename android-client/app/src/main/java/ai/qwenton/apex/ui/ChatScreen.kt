@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
@@ -18,10 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.qwenton.apex.domain.*
+import ai.qwenton.apex.ui.components.*
 import ai.qwenton.apex.ui.theme.*
 
 @Composable
@@ -31,25 +30,42 @@ fun ChatScreen(
     isStreaming: Boolean,
     pendingProposal: CommandProposal?,
     serverUrl: String,
+    activeWorkspace: String = "~/workspace",
+    activeModel: String = "Gemini 1.5",
+    batteryInfo: String? = null,
     onSendMessage: (String) -> Unit,
     onStopRequest: () -> Unit,
     onMicClick: () -> Unit,
     onApproveCommand: (String) -> Unit,
     onRejectCommand: (String) -> Unit,
     onRetryConnection: () -> Unit,
+    onSelectWorkspace: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf("") }
+    var showWorkspaceDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
-    // Scroll to bottom when new messages arrive
+    // Scroll to bottom on new messages or stream updates
     LaunchedEffect(messages.size, isStreaming) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
     }
 
-    // Modal approval dialog if there is a pending proposal
+    // Modal workspace folder selection dialog
+    if (showWorkspaceDialog) {
+        WorkspaceDialog(
+            currentWorkspace = activeWorkspace,
+            onSelectWorkspace = { path ->
+                onSelectWorkspace(path)
+                onSendMessage("Set active workspace to: $path")
+            },
+            onDismiss = { showWorkspaceDialog = false }
+        )
+    }
+
+    // Cryptographic Approval Dialog with HMAC Verification
     if (pendingProposal != null) {
         CommandApprovalDialog(
             proposal = pendingProposal,
@@ -59,21 +75,57 @@ fun ChatScreen(
         )
     }
 
+    // Determine Reactor Core State
+    val reactorState = when {
+        pendingProposal != null -> ReactorState.APPROVAL_REQUIRED
+        isStreaming -> ReactorState.THINKING
+        connectionStatus is ConnectionStatus.Connected -> ReactorState.IDLE
+        else -> ReactorState.IDLE
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(DarkCharcoalBg)
-            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        // Top Connection Status Banner
-        ConnectionStatusBar(
-            status = connectionStatus,
-            serverUrl = serverUrl,
-            onRetryClick = onRetryConnection,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // 1. Futuristic Header HUD: Reactor Core + Telemetry Bar
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Animated Reactor Core Orb
+            QwentonReactorCore(
+                state = reactorState,
+                size = 90.dp,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
 
-        // Message Thread
+            // Live Real-Time Telemetry Bar
+            TelemetryBanner(
+                connectionStatus = connectionStatus,
+                activeWorkspace = activeWorkspace,
+                activeModel = activeModel,
+                batteryInfo = batteryInfo,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+
+            // Quick Command Action Rail
+            QuickCommandRail(
+                onActionClick = { action ->
+                    if (action.id == "workspace") {
+                        showWorkspaceDialog = true
+                    } else {
+                        onSendMessage(action.prompt)
+                    }
+                },
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+
+        // 2. Message Thread
         if (messages.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -81,21 +133,28 @@ fun ChatScreen(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Surface(
+                    color = CharcoalSurface,
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CharcoalBorder),
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "Qwenton Apex",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "Your private on-device assistant. Ask a question or request device automation.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextMuted,
-                        modifier = Modifier.padding(horizontal = 24.dp)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "QWENTON APEX OPERATING SYSTEM",
+                            style = MonospaceHeader.copy(fontSize = 13.sp),
+                            color = PrimaryVioletLight
+                        )
+                        Text(
+                            text = "Air-gapped on-device AI operations center. Autonomous coding, SAST security audits, and Shizuku/ADB automation ready.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
+                    }
                 }
             }
         } else {
@@ -104,8 +163,8 @@ fun ChatScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
             ) {
                 items(messages, key = { it.id }) { message ->
                     ChatMessageBubble(message = message)
@@ -113,24 +172,24 @@ fun ChatScreen(
             }
         }
 
-        // Bottom Input Composer
+        // 3. Cybernetic Composer Input
         Surface(
             color = CharcoalSurface,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, CharcoalBorder),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp)
+                .padding(vertical = 4.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
                     onClick = onMicClick,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Mic,
@@ -143,7 +202,7 @@ fun ChatScreen(
                     value = inputText,
                     onValueChange = { inputText = it },
                     placeholder = {
-                        Text("Type a prompt...", color = TextMuted, fontSize = 14.sp)
+                        Text("Instruct Qwenton...", color = TextMuted, fontSize = 13.sp)
                     },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
@@ -162,11 +221,11 @@ fun ChatScreen(
                 if (isStreaming) {
                     IconButton(
                         onClick = onStopRequest,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(38.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Stop,
-                            contentDescription = "Stop Generation",
+                            contentDescription = "Abort Stream",
                             tint = StatusRed
                         )
                     }
@@ -179,11 +238,11 @@ fun ChatScreen(
                             }
                         },
                         enabled = inputText.isNotBlank(),
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(38.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
-                            contentDescription = "Send",
+                            contentDescription = "Execute Prompt",
                             tint = if (inputText.isNotBlank()) PrimaryViolet else TextMuted
                         )
                     }
@@ -206,17 +265,18 @@ fun ChatMessageBubble(message: ChatMessage) {
         Surface(
             color = bubbleColor,
             shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 16.dp
+                topStart = 14.dp,
+                topEnd = 14.dp,
+                bottomStart = if (isUser) 14.dp else 2.dp,
+                bottomEnd = if (isUser) 2.dp else 14.dp
             ),
-            modifier = Modifier.widthIn(max = 310.dp)
+            border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, CharcoalBorder) else null,
+            modifier = Modifier.widthIn(max = 330.dp)
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(10.dp)) {
                 Text(
                     text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
                     color = TextPrimary
                 )
 
@@ -224,28 +284,29 @@ fun ChatMessageBubble(message: ChatMessage) {
                     LinearProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
+                            .padding(top = 6.dp),
                         color = PrimaryVioletLight,
                         trackColor = CharcoalBorder
                     )
                 }
 
                 if (message.toolProposal != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Surface(
                         color = TerminalBg,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CharcoalBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             Text(
-                                text = "Action: ${message.toolProposal.tool}",
-                                style = MonospaceHeader,
+                                text = "ACTION: ${message.toolProposal.tool}",
+                                style = MonospaceHeader.copy(fontSize = 11.sp),
                                 color = PrimaryVioletLight
                             )
                             Text(
                                 text = message.toolProposal.explanation,
-                                style = MonospaceBody,
+                                style = MonospaceBody.copy(fontSize = 10.sp),
                                 color = TextSecondary
                             )
                         }

@@ -185,6 +185,9 @@ fun MainAppScaffold(
                     isStreaming = uiState.isStreaming,
                     pendingProposal = uiState.pendingProposal,
                     serverUrl = uiState.serverUrl,
+                    activeWorkspace = uiState.activeWorkspace,
+                    activeModel = uiState.activeModel,
+                    batteryInfo = uiState.batteryInfo,
                     onSendMessage = { text -> viewModel.sendMessage(text) },
                     onStopRequest = {
                         viewModel.stopRequest()
@@ -223,7 +226,8 @@ fun MainAppScaffold(
                     },
                     onApproveCommand = { cmdId -> viewModel.approveCommand(cmdId) },
                     onRejectCommand = { cmdId -> viewModel.rejectCommand(cmdId) },
-                    onRetryConnection = { viewModel.testConnection() }
+                    onRetryConnection = { viewModel.testConnection() },
+                    onSelectWorkspace = { path -> viewModel.setWorkspace(path) }
                 )
             }
 
@@ -252,8 +256,16 @@ fun MainAppScaffold(
             composable(NavRoute.Settings.route) {
                 SettingsScreen(
                     serverUrl = uiState.serverUrl,
+                    aiProvider = uiState.aiProvider,
+                    apiKey = uiState.apiKey,
+                    activeModel = uiState.activeModel,
+                    configSyncStatus = uiState.configSyncStatus,
                     onSaveServerUrl = { url -> viewModel.setServerUrl(url) },
                     onTestConnection = { viewModel.testConnection() },
+                    onSaveAiConfig = { provider, key, model ->
+                        viewModel.setAiConfig(provider, key, model)
+                        Toast.makeText(context, "Saving AI config to Termux .env...", Toast.LENGTH_SHORT).show()
+                    },
                     onStartTermuxServer = {
                         val result = TermuxServiceHelper.startApexServer(context)
                         if (result.isSuccess) {

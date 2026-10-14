@@ -48,7 +48,7 @@ val DEFAULT_SKILLS = listOf(
         description = "Install dependencies inside Termux virtualenv via pip.",
         permissionRequired = "Approval Required",
         riskLevel = RiskLevel.MEDIUM,
-        isEnabled = false
+        isEnabled = true
     ),
     SkillInfo(
         id = "run_known_script",
@@ -56,7 +56,31 @@ val DEFAULT_SKILLS = listOf(
         description = "Execute a pre-registered automation script from ~/.qwenton/scripts/.",
         permissionRequired = "Approval Required",
         riskLevel = RiskLevel.HIGH,
-        isEnabled = false
+        isEnabled = true
+    ),
+    SkillInfo(
+        id = "coding_agent",
+        name = "Autonomous Coding Engine",
+        description = "Explore directory trees, read code, write files, and apply surgical patches.",
+        permissionRequired = "Approval Required",
+        riskLevel = RiskLevel.MEDIUM,
+        isEnabled = true
+    ),
+    SkillInfo(
+        id = "sast_pentest",
+        name = "SAST Security Pentest",
+        description = "Perform automated defensive vulnerability and secret scanning on project files.",
+        permissionRequired = "None",
+        riskLevel = RiskLevel.SAFE,
+        isEnabled = true
+    ),
+    SkillInfo(
+        id = "adb_device_control",
+        name = "Shizuku / ADB Device Automation",
+        description = "Execute privileged shell commands, input taps, keystrokes, and dumpsys via ADB.",
+        permissionRequired = "Shizuku / ADB (UID 2000)",
+        riskLevel = RiskLevel.HIGH,
+        isEnabled = true
     )
 )
 
@@ -69,7 +93,14 @@ data class QwentonUiState(
     val activeExecution: TerminalExecution? = null,
     val ttsEnabled: Boolean = false,
     val skills: List<SkillInfo> = DEFAULT_SKILLS,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val activeWorkspace: String = "~/workspace",
+    val activeModel: String = "Gemini 1.5 Pro",
+    val batteryInfo: String? = null,
+    val aiProvider: String = "gemini",
+    val apiKey: String = "",
+    val shizukuAvailable: Boolean = false,
+    val configSyncStatus: String? = null
 )
 
 class QwentonViewModel(
@@ -110,6 +141,7 @@ class QwentonViewModel(
                 // Connect WebSocket
                 val wsUrl = _uiState.value.serverUrl.replace("http://", "ws://").replace("https://", "wss://") + "/ws/events"
                 wsClient.connect(wsUrl)
+                fetchAiConfig()
             } else {
                 val err = result.exceptionOrNull()?.localizedMessage ?: "Connection refused"
                 _uiState.update { it.copy(connectionStatus = ConnectionStatus.Disconnected(err)) }
@@ -123,6 +155,47 @@ class QwentonViewModel(
         testConnection()
     }
 
+    fun setWorkspace(path: String) {
+        _uiState.update { it.copy(activeWorkspace = path) }
+    }
+
+    fun fetchAiConfig() {
+        viewModelScope.launch {
+            val res = repository.getAiConfig()
+            res.onSuccess { cfg ->
+                _uiState.update {
+                    it.copy(
+                        aiProvider = cfg.provider,
+                        activeModel = cfg.model,
+                        configSyncStatus = "Synced with Termux server"
+                    )
+                }
+            }
+        }
+    }
+
+    fun setAiConfig(provider: String, apiKey: String, model: String) {
+        _uiState.update {
+            it.copy(
+                aiProvider = provider,
+                activeModel = model,
+                configSyncStatus = "Saving to Termux .env..."
+            )
+        }
+        viewModelScope.launch {
+            val res = repository.updateAiProvider(provider, apiKey, model)
+            res.onSuccess { resp ->
+                _uiState.update {
+                    it.copy(configSyncStatus = "Key Vault synchronized: ${resp.provider} (${resp.model})")
+                }
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(configSyncStatus = "Sync failed: ${err.localizedMessage}")
+                }
+            }
+        }
+    }
+
     fun sendMessage(text: String) {
         if (text.isBlank() || _uiState.value.isStreaming) return
 
@@ -133,7 +206,8 @@ class QwentonViewModel(
             val result = repository.sendChat(
                 requestId = requestId,
                 conversationId = activeConversationId,
-                message = text
+                message = text,
+                contextPath = _uiState.value.activeWorkspace
             )
 
             _uiState.update { it.copy(isStreaming = false) }
@@ -143,10 +217,10 @@ class QwentonViewModel(
                     val proposal = CommandProposal(
                         commandId = resp.commandId,
                         requestId = resp.requestId,
-                        tool = resp.program ?: "command",
+                        tool = resp.tool ?: resp.program ?: "command",
                         program = resp.program ?: "sh",
-                        arguments = emptyList(),
-                        workingDirectory = resp.workingDirectory ?: "/data/data/com.termux/files/home",
+                        arguments = (resp.arguments?.get("args") as? List<*>)?.map { it.toString() } ?: emptyList(),
+                        workingDirectory = resp.workingDirectory ?: _uiState.value.activeWorkspace,
                         risk = when (resp.risk?.lowercase()) {
                             "high" -> RiskLevel.HIGH
                             "blocked" -> RiskLevel.BLOCKED
@@ -177,7 +251,7 @@ class QwentonViewModel(
                     commandId = commandId,
                     program = proposal.program,
                     arguments = proposal.arguments,
-                    stdout = "Executing...",
+                    stdout = "Executing with cryptographic token...",
                     stderr = "",
                     exitCode = null,
                     isRunning = true,

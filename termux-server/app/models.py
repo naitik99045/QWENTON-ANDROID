@@ -27,7 +27,8 @@ class ChatRequest(BaseModel):
     request_id: str
     conversation_id: str
     message: str
-    client_version: Optional[str] = "0.1.0"
+    client_version: Optional[str] = "0.2.0"
+    context_path: Optional[str] = "."
 
 class AssistantMessageResponse(BaseModel):
     type: str = "assistant_message"

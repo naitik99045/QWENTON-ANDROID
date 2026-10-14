@@ -13,7 +13,8 @@ data class ChatRequestDto(
     @SerializedName("request_id") val requestId: String,
     @SerializedName("conversation_id") val conversationId: String,
     @SerializedName("message") val message: String,
-    @SerializedName("client_version") val clientVersion: String = "0.1.0"
+    @SerializedName("client_version") val clientVersion: String = "0.2.0",
+    @SerializedName("context_path") val contextPath: String? = null
 )
 
 data class ChatResponseDto(
@@ -41,4 +42,18 @@ data class CommandApprovalResponseDto(
     @SerializedName("approved") val approved: Boolean,
     @SerializedName("status") val status: String,
     @SerializedName("message") val message: String
+)
+
+// In-App AI Provider & Key Vault Models
+data class AiConfigRequestDto(
+    @SerializedName("provider") val provider: String,
+    @SerializedName("api_key") val apiKey: String,
+    @SerializedName("model") val model: String
+)
+
+data class AiConfigResponseDto(
+    @SerializedName("status") val status: String,
+    @SerializedName("provider") val provider: String,
+    @SerializedName("model") val model: String,
+    @SerializedName("api_key_masked") val apiKeyMasked: String? = null
 )
